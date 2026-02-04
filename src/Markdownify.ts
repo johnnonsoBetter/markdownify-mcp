@@ -5,6 +5,7 @@ import fs from "fs";
 import os from "os";
 import { fileURLToPath } from "url";
 import { expandHome } from "./utils.js";
+import { validateMarkdownReadPath } from "./markdownPath.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -67,10 +68,6 @@ export class Markdownify {
     return tempOutputPath;
   }
 
-  private static normalizePath(p: string): string {
-    return path.normalize(p);
-  }
-
   static async toMarkdown({
     filePath,
     url,
@@ -128,30 +125,19 @@ export class Markdownify {
   }: {
     filePath: string;
   }): Promise<MarkdownResult> {
-    // Check file type is *.md or *.markdown
-    const normPath = this.normalizePath(path.resolve(expandHome(filePath)));
-    const markdownExt = [".md", ".markdown"];
-    if (!markdownExt.includes(path.extname(normPath))) {
-      throw new Error("Required file is not a Markdown file.");
-    }
+    const normPath = validateMarkdownReadPath({
+      filePath,
+      mdShareDir: process.env?.MD_SHARE_DIR,
+    });
 
-    if (process.env?.MD_SHARE_DIR) {
-      const allowedShareDir = this.normalizePath(
-        path.resolve(expandHome(process.env.MD_SHARE_DIR)),
-      );
-      if (!normPath.startsWith(allowedShareDir)) {
-        throw new Error(`Only files in ${allowedShareDir} are allowed.`);
-      }
-    }
-
-    if (!fs.existsSync(filePath)) {
+    if (!fs.existsSync(normPath)) {
       throw new Error("File does not exist");
     }
 
-    const text = await fs.promises.readFile(filePath, "utf-8");
+    const text = await fs.promises.readFile(normPath, "utf-8");
 
     return {
-      path: filePath,
+      path: normPath,
       text: text,
     };
   }

@@ -45,6 +45,7 @@ Note: this will also install `uv` and related Python depdencies.
 ## Development
 
 - Use `pnpm run dev` to start the TypeScript compiler in watch mode
+- Use `pnpm test` to run unit tests with Jest
 - Modify `src/server.ts` to customize server behavior
 - Add or modify tools in `src/tools.ts`
 
